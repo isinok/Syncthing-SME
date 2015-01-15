@@ -1,0 +1,74 @@
+{
+    # we can snag lexical $fi_filename from Text::Template to find out how
+    # we were called
+    $NO_FRAMES = ($fi_filename =~ /noframes_.*\.tmpl$/) ? 1 : 0;
+    $USER_PASSWORD = ($fi_filename =~ /userpassword_.*\.tmpl$/) ? 1 : 0;
+    $OUT;
+}
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>SME Server sme01.stage-eloi.local</title>
+{ 
+    unless ($NO_FRAMES)
+    {
+       $OUT .= <<EOF;
+  <link rev="made" href="mailto:bugs%40e-smith.com">
+  <meta name="copyright" content="(head.tmpl)Copyright 2003-2004 Mitel Corporation">
+  <link rel="stylesheet" type="text/css" href="/server-common/css/sme_core.css">
+  <style type="text/css"> 
+  \@import url("/server-common/css/sme_main.css");
+  </style>
+EOF
+    }
+    $OUT;
+}
+</head>
+{
+  if ($NO_FRAMES)
+  {
+    $OUT .= <<EOF;
+<frameset rows="68,*" cols="*" frameborder="NO" border="0" framespacing="0">
+  <frame src="/server-manager/header.htm" name="header" scrolling="NO" noresize >
+  <frameset rows="*" cols="192,*" framespacing="0" frameborder="NO" border="0">
+    <frame src="/server-manager/navigation" name="navigation" scrolling="auto" noresize>
+    <frame src="/server-manager/initial.cgi" name="main">
+  </frameset>
+</frameset>
+
+</FRAMESET>
+
+<NOFRAMES>
+EOF
+  }
+  else
+  {
+     my $panel = "Server manager";
+     my $img = "smeserver_logo.jpg";
+
+     $OUT .= <<EOF;
+<body>
+EOF
+  }
+
+  if( $ENV{REQUEST_URI} =~ m/(server-manager)/) {
+
+    $DB = esmith::ConfigDB->open();
+    $OUT .= qq(<div class="sme-error"><h5>
+      Warning: you have not yet changed the default system password.</h5></div>)
+      unless ($DB->get('PasswordSet')->value eq "yes");
+
+    $OUT .= qq(<div class="sme-error"><h5>
+      Warning: a reconfigure and reboot is required before proceeding! Failure to do so now
+      may leave your system in an unknown state!</h5></div>)
+      if ($DB->get('bootstrap-console') and $DB->get('bootstrap-console')->prop('Run') eq 'yes') ||
+         ($DB->get('UnsavedChanges') and $DB->get('UnsavedChanges')->value eq 'yes');
+
+    $OUT;
+
+  }
+
+}
+<center><IFRAME src="https://sme01:8080/index.html" width="1000" height="700"></IFRAME></center>
